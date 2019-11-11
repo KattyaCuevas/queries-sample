@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_11_07_195712) do
+ActiveRecord::Schema.define(version: 2019_11_08_181214) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -67,4 +67,24 @@ ActiveRecord::Schema.define(version: 2019_11_07_195712) do
   add_foreign_key "song_album_artists", "albums"
   add_foreign_key "song_album_artists", "artists"
   add_foreign_key "song_album_artists", "songs"
+
+  create_view "songs_ratings", materialized: true, sql_definition: <<-SQL
+      SELECT songs_ratings.id,
+      songs_ratings.title,
+      (songs_ratings.rating)::double precision AS rating,
+      albums.id AS album_id,
+      albums.title AS album_title,
+      artists.id AS artist_id,
+      artists.name AS artists_name
+     FROM (((( SELECT songs.id,
+              songs.title,
+              avg(ratings.value) AS rating
+             FROM (ratings
+               JOIN songs ON ((ratings.ratingable_id = songs.id)))
+            WHERE ((ratings.ratingable_type)::text = 'Song'::text)
+            GROUP BY ratings.ratingable_id, songs.id) songs_ratings
+       JOIN song_album_artists ON ((song_album_artists.song_id = songs_ratings.id)))
+       JOIN albums ON ((song_album_artists.album_id = albums.id)))
+       JOIN artists ON ((song_album_artists.artist_id = artists.id)));
+  SQL
 end

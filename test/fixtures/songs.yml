@@ -7,3 +7,14 @@ one:
 two:
   title: MyString
   duration: 1
+
+# == Schema Information
+#
+# Table name: songs
+#
+#  id         :integer          not null, primary key
+#  title      :string
+#  duration   :integer
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#
